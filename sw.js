@@ -1,4 +1,4 @@
-const CACHE_NAME = "hangul-master-cache-v1";
+const CACHE_NAME = "hangul-ascend-v1";
 const urlsToCache = [
   "index.html",
   "manifest.json"
