@@ -1,278 +1,309 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hangul Ascend</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HANGUESS</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#111">
 
 <style>
 body{
-    margin:0;
-    background:#111827;
-    font-family:Arial, sans-serif;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+  margin:0;
+  font-family:system-ui;
+  background:#111;
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
 }
-.container{
-    width:95%;
-    max-width:520px;
-    background:#1f2937;
-    padding:25px;
-    border-radius:20px;
-    text-align:center;
-}
-.char{
-    font-size:85px;
-    margin:20px 0;
+#app{
+  width:100%;
+  max-width:500px;
+  padding:20px;
+  text-align:center;
 }
 button{
-    margin-top:10px;
-    padding:10px 20px;
-    border:none;
-    border-radius:10px;
-    font-size:16px;
-    background:#10b981;
-    color:white;
-}
-.secondary{
-    background:#374151;
+  padding:10px 18px;
+  margin:5px;
+  border-radius:10px;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
 }
 input{
-    width:90%;
-    padding:14px;
-    font-size:18px;
-    border-radius:10px;
-    border:none;
-    text-align:center;
-    margin-top:10px;
+  padding:12px;
+  font-size:20px;
+  text-align:center;
+  border-radius:10px;
+  border:none;
+  width:100%;
+}
+.hangul{
+  font-size:80px;
+  margin:20px 0;
+}
+.error{
+  color:#ff4444;
+  font-size:90px;
+}
+.hint{
+  color:#ff8888;
+  margin-top:10px;
 }
 .stats{
-    margin-top:12px;
-    font-size:14px;
+  margin-top:10px;
+  font-size:14px;
+  opacity:0.8;
 }
-.timer{
-    margin-top:12px;
+.progressBar{
+  height:6px;
+  background:#333;
+  margin:10px 0;
+  border-radius:4px;
+  overflow:hidden;
 }
-.bar{
-    height:6px;
-    background:#374151;
-    border-radius:4px;
-    overflow:hidden;
+.progressInner{
+  height:100%;
+  background:#00ff88;
+  width:100%;
+  transition:width 0.3s;
 }
-.fill{
-    height:100%;
-    width:100%;
-    background:#10b981;
-    transition:width 1s linear;
-}
-.feedback{
-    margin-top:10px;
-    min-height:22px;
-}
-.stage{
-    font-size:13px;
-    opacity:.7;
+.hidden{
+  display:none;
 }
 </style>
 </head>
 <body>
+<div id="app">
 
-<div class="container">
-    <div class="stage" id="stage"></div>
-    <div>Poziom: <span id="level">1</span></div>
+<h1>HANGUESS</h1>
 
-    <div class="char" id="char"></div>
-    <button class="secondary" onclick="replay()">🔊 Odsłuchaj</button>
+<div id="modeSelect">
+  <button onclick="startGame('learning')">Learning Mode</button>
+  <button onclick="startGame('challenge')">Challenge Mode</button>
+</div>
 
-    <input id="answer" placeholder="Wpisz polską fonetykę..." autofocus>
+<div id="game" class="hidden">
 
-    <div class="feedback" id="feedback"></div>
+<div id="stageInfo"></div>
+<div id="levelInfo"></div>
 
-    <div class="stats">
-        Punkty: <span id="points">0</span> |
-        Streak: <span id="streak">0</span>
-    </div>
+<div class="progressBar">
+  <div id="timerBar" class="progressInner"></div>
+</div>
 
-    <div class="timer">
-        <div class="bar"><div class="fill" id="bar"></div></div>
-        <div>Czas: <span id="time"></span>s</div>
-    </div>
+<div id="char" class="hangul"></div>
+
+<input id="answer" autocomplete="off" />
+<div id="feedback" class="hint"></div>
+
+<div class="stats" id="stats"></div>
+
+<button onclick="quit()">Wyjdź</button>
+
+</div>
+
 </div>
 
 <script>
+const stages = {
 
-// ===== DATA =====
+letters: [
+["ㄱ","g"],["ㄴ","n"],["ㄷ","d"],["ㄹ","r"],
+["ㅁ","m"],["ㅂ","b"],["ㅅ","s"],["ㅇ","ng"],
+["ㅈ","j"],["ㅊ","ch"],["ㅋ","k"],["ㅌ","t"],
+["ㅍ","p"],["ㅎ","h"],
+["ㅏ","a"],["ㅓ","eo"],["ㅗ","o"],["ㅜ","u"],
+["ㅡ","eu"],["ㅣ","i"]
+],
 
-const stages = [
-{
-name:"Spółgłoski",
-pool:[
-{c:"ㄱ",a:["g","k"]},{c:"ㄴ",a:["n"]},{c:"ㄷ",a:["d","t"]},
-{c:"ㄹ",a:["r","l"]},{c:"ㅁ",a:["m"]},{c:"ㅂ",a:["b","p"]},
-{c:"ㅅ",a:["s"]},{c:"ㅇ",a:["ng",""]},{c:"ㅈ",a:["dz","j"]},
-{c:"ㅎ",a:["h"]}
-]},
-{
-name:"Samogłoski",
-pool:[
-{c:"ㅏ",a:["a"]},{c:"ㅓ",a:["o"]},{c:"ㅗ",a:["o"]},
-{c:"ㅜ",a:["u"]},{c:"ㅡ",a:["y"]},{c:"ㅣ",a:["i"]},
-{c:"ㅐ",a:["e"]},{c:"ㅔ",a:["e"]}
-]},
-{
-name:"Sylaby",
-pool:[
-{c:"가",a:["ga"]},{c:"나",a:["na"]},{c:"다",a:["da","ta"]},
-{c:"라",a:["ra","la"]},{c:"마",a:["ma"]},{c:"바",a:["ba","pa"]},
-{c:"사",a:["sa"]},{c:"자",a:["dza","ja"]}
-]},
-{
-name:"Słowa",
-pool:[
-{c:"감사합니다",a:["gamsahamnida"]},
-{c:"안녕하세요",a:["annjonghasejo","annyeonghasejo"]}
-]}
-];
+batchim: [
+["각","gak"],["간","gan"],["갈","gal"],
+["감","gam"],["갑","gap"],["강","gang"],
+["값","gaps"],["읽","ilg"]
+],
 
-// ===== GAME STATE =====
+syllables: [
+["가","ga"],["너","neo"],["도","do"],
+["고","go"],["구","gu"],["귀","gwi"],
+["한","han"],["달","dal"]
+],
 
-let stageIndex=0;
+words: [
+["집","jip"],["사람","saram"],
+["학교","hakgyo"],["사랑","sarang"],
+["한국","hanguk"]
+]
+
+};
+
+let mode;
+let stageKeys = ["letters","batchim","syllables","words"];
+let currentStageIndex=0;
 let level=1;
-let streak=0;
-let points=0;
-let timer=null;
-let timeLimit=7;
-let current=null;
 let pool=[];
-let lastChar=null;
-let mistakePool=[];
+let requiredCorrect=2;
+let progress={};
+let currentItem;
+let lastChar="";
+let timer;
+let timeLimit=5000;
+let startTime;
 
-// ===== GAME LOGIC =====
-
-function updateStage(){
-    document.getElementById("stage").innerText = stages[stageIndex].name;
-    pool = stages[stageIndex].pool.slice(0, level);
+function startGame(selected){
+mode=selected;
+document.getElementById("modeSelect").classList.add("hidden");
+document.getElementById("game").classList.remove("hidden");
+loadState();
+initStage();
 }
 
-function pick(){
-    let available = [...pool];
+function initStage(){
+let stageName=stageKeys[currentStageIndex];
+let data=stages[stageName];
+pool=data.slice(0,Math.min(level*4,data.length));
+progress={};
+pool.forEach(x=>progress[x[0]]=0);
+updateUI();
+nextQuestion();
+}
 
-    if(mistakePool.length > 0){
-        available = available.concat(mistakePool);
-    }
-
-    let next;
-
-    do {
-        next = available[Math.floor(Math.random()*available.length)];
-    } while (available.length > 1 && next.c === lastChar);
-
-    current = next;
-    lastChar = current.c;
-
-    document.getElementById("char").innerText = current.c;
-    document.getElementById("feedback").innerText = "";
-    document.getElementById("answer").value = "";
-
-    startTimer();
+function nextQuestion(){
+let choices=pool.filter(x=>x[0]!==lastChar);
+currentItem=choices[Math.floor(Math.random()*choices.length)];
+lastChar=currentItem[0];
+document.getElementById("char").className="hangul";
+document.getElementById("char").textContent=currentItem[0];
+document.getElementById("feedback").textContent="";
+document.getElementById("answer").value="";
+document.getElementById("answer").focus();
+startTimer();
 }
 
 function startTimer(){
-    let t = timeLimit;
-    const bar = document.getElementById("bar");
-    document.getElementById("time").innerText = t;
-    bar.style.width = "100%";
-
-    clearInterval(timer);
-
-    timer = setInterval(()=>{
-        t--;
-        document.getElementById("time").innerText = t;
-        bar.style.width = (t/timeLimit*100)+"%";
-
-        if(t <= 0){
-            clearInterval(timer);
-            handleFail();
-        }
-    },1000);
+clearInterval(timer);
+timeLimit=5000 - (level*200);
+if(timeLimit<2000) timeLimit=2000;
+startTime=Date.now();
+timer=setInterval(()=>{
+let elapsed=Date.now()-startTime;
+let percent=100-(elapsed/timeLimit*100);
+if(percent<0) percent=0;
+document.getElementById("timerBar").style.width=percent+"%";
+if(elapsed>timeLimit){
+clearInterval(timer);
+handleWrong("Czas minął!");
+}
+},50);
 }
 
-function check(){
-    clearInterval(timer);
-
-    const val = document.getElementById("answer").value.trim().toLowerCase();
-
-    if(current.a.includes(val)){
-        streak++;
-        mistakePool = mistakePool.filter(x => x.c !== current.c);
-        let multiplier = 1 + Math.floor(streak/3);
-        points += 10 * multiplier;
-        document.getElementById("feedback").innerText = "Dobrze x"+multiplier;
-        maybeLevelUp();
-    } else {
-        handleFail();
-        return;
-    }
-
-    updateStats();
-    pick();
+function handleCorrect(){
+clearInterval(timer);
+progress[currentItem[0]]++;
+playBeep(800);
+if(progress[currentItem[0]]>=requiredCorrect){
+checkAdvance();
+}
+saveState();
+nextQuestion();
 }
 
-function handleFail(){
-    streak = 0;
-    mistakePool.push(current);
-    document.getElementById("feedback").innerText = "Źle: " + current.a[0];
-    updateStats();
-    pick();
+function handleWrong(msg){
+clearInterval(timer);
+playBeep(200);
+progress[currentItem[0]]--;
+requiredCorrect++;
+document.getElementById("char").className="hangul error";
+document.getElementById("feedback").textContent=
+msg+" Poprawnie: "+currentItem[1];
+if(progress[currentItem[0]]<0){
+let allZero=Object.values(progress).every(v=>v<=0);
+if(allZero && level>1){
+level--;
+}
+}
+saveState();
+setTimeout(nextQuestion,1200);
 }
 
-function maybeLevelUp(){
-    if(streak > 0 && streak % 5 === 0){
-        level++;
-        if(level > stages[stageIndex].pool.length){
-            stageIndex++;
-            level = 1;
-            if(stageIndex >= stages.length){
-                stageIndex = 0;
-            }
-        }
-        document.getElementById("level").innerText = level;
-        updateStage();
-    }
+function checkAdvance(){
+let allDone=Object.values(progress).every(v=>v>=requiredCorrect);
+if(allDone){
+level++;
+let stageName=stageKeys[currentStageIndex];
+if(level*4>stages[stageName].length){
+currentStageIndex++;
+level=1;
+}
+if(currentStageIndex>=stageKeys.length){
+alert("Gra ukończona!");
+quit();
+return;
+}
+initStage();
+}
 }
 
-function updateStats(){
-    document.getElementById("points").innerText = points;
-    document.getElementById("streak").innerText = streak;
+document.getElementById("answer").addEventListener("keydown",e=>{
+if(e.key==="Enter"){
+if(e.target.value.trim().toLowerCase()===currentItem[1]){
+handleCorrect();
+}else{
+handleWrong("Błąd!");
 }
-
-function replay(){
-    if('speechSynthesis' in window && current){
-        const u = new SpeechSynthesisUtterance(current.c);
-        u.lang = "ko-KR";
-        speechSynthesis.speak(u);
-    }
 }
-
-document.getElementById("answer").addEventListener("keydown", function(e){
-    if(e.key === "Enter"){
-        check();
-    }
 });
 
-if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js');
+function updateUI(){
+let stageName=stageKeys[currentStageIndex];
+document.getElementById("stageInfo").textContent="Etap: "+stageName;
+document.getElementById("levelInfo").textContent=
+"Poziom: "+level+" | Znaki: "+pool.length+" | Wymagane: "+requiredCorrect;
+if(mode==="challenge"){
+document.getElementById("stats").classList.add("hidden");
+}else{
+document.getElementById("stats").classList.remove("hidden");
+document.getElementById("stats").textContent=
+"Progres: "+JSON.stringify(progress);
+}
 }
 
-updateStage();
-pick();
+function playBeep(freq){
+let ctx=new(window.AudioContext||window.webkitAudioContext)();
+let osc=ctx.createOscillator();
+osc.frequency.value=freq;
+osc.connect(ctx.destination);
+osc.start();
+osc.stop(ctx.currentTime+0.15);
+}
 
+function quit(){
+location.reload();
+}
+
+function saveState(){
+localStorage.setItem("hanguess",JSON.stringify({
+mode,currentStageIndex,level,requiredCorrect
+}));
+}
+
+function loadState(){
+let s=localStorage.getItem("hanguess");
+if(s){
+let data=JSON.parse(s);
+mode=data.mode;
+currentStageIndex=data.currentStageIndex;
+level=data.level;
+requiredCorrect=data.requiredCorrect;
+}
+}
+
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js');
+}
 </script>
 </body>
 </html>
