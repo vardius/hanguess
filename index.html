@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hangul Master PRO</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111827">
+
+<style>
+body{
+    margin:0;
+    background:#111827;
+    font-family:Arial, sans-serif;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+.container{
+    width:95%;
+    max-width:500px;
+    background:#1f2937;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+}
+.char{
+    font-size:80px;
+    margin:20px 0;
+}
+input{
+    width:90%;
+    padding:14px;
+    font-size:18px;
+    border-radius:10px;
+    border:none;
+    text-align:center;
+}
+button{
+    margin-top:12px;
+    padding:10px 20px;
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    background:#10b981;
+    color:white;
+}
+.stats{margin-top:10px;font-size:14px;}
+.timer{
+    margin-top:10px;
+}
+.bar{
+    height:6px;
+    background:#374151;
+    border-radius:4px;
+    overflow:hidden;
+}
+.fill{
+    height:100%;
+    width:100%;
+    background:#10b981;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div id="stage"></div>
+    <div>Poziom: <span id="level">1</span></div>
+    <div class="char" id="char"></div>
+
+    <input id="answer" placeholder="Wpisz fonetykę..." autofocus>
+    <br>
+    <button onclick="check()">Sprawdź</button>
+
+    <div id="feedback"></div>
+
+    <div class="stats">
+        Punkty: <span id="points">0</span> |
+        Streak: <span id="streak">0</span>
+    </div>
+
+    <div class="timer">
+        <div class="bar"><div class="fill" id="bar"></div></div>
+        <div>Czas: <span id="time"></span>s</div>
+    </div>
+</div>
+
+<script>
+
+// ===== DATA =====
+const stages = [
+{name:"Spółgłoski", pool:[
+{c:"ㄱ",a:["g","k"]},{c:"ㄴ",a:["n"]},{c:"ㄷ",a:["d","t"]},
+{c:"ㄹ",a:["r","l"]},{c:"ㅁ",a:["m"]},{c:"ㅂ",a:["b","p"]},
+{c:"ㅅ",a:["s"]},{c:"ㅇ",a:["ng",""]},{c:"ㅈ",a:["dz","j"]},
+{c:"ㅎ",a:["h"]}
+]},
+{name:"Samogłoski", pool:[
+{c:"ㅏ",a:["a"]},{c:"ㅓ",a:["o"]},{c:"ㅗ",a:["o"]},
+{c:"ㅜ",a:["u"]},{c:"ㅡ",a:["y"]},{c:"ㅣ",a:["i"]},
+{c:"ㅐ",a:["e"]},{c:"ㅔ",a:["e"]}
+]},
+{name:"Sylaby", pool:[
+{c:"가",a:["ga"]},{c:"나",a:["na"]},{c:"다",a:["da","ta"]},
+{c:"라",a:["ra","la"]},{c:"마",a:["ma"]},
+{c:"사",a:["sa"]},{c:"자",a:["dza","ja"]}
+]},
+{name:"Słowa", pool:[
+{c:"감사합니다",a:["gamsahamnida"]},
+{c:"안녕하세요",a:["annjonghasejo","annyeonghasejo"]}
+]}
+];
+
+// ===== GAME =====
+let stage=0, level=1, streak=0, points=0, timer, timeLimit=7;
+let current, pool;
+
+function updateStage(){
+    document.getElementById("stage").innerText=stages[stage].name;
+    pool=stages[stage].pool.slice(0,level);
+}
+
+function pick(){
+    current=pool[Math.floor(Math.random()*pool.length)];
+    document.getElementById("char").innerText=current.c;
+    speak(current.c);
+    startTimer();
+}
+
+function startTimer(){
+    let t=timeLimit;
+    document.getElementById("time").innerText=t;
+    const bar=document.getElementById("bar");
+    bar.style.width="100%";
+    clearInterval(timer);
+
+    timer=setInterval(()=>{
+        t--;
+        document.getElementById("time").innerText=t;
+        bar.style.width=(t/timeLimit*100)+"%";
+        if(t<=0){
+            clearInterval(timer);
+            fail();
+        }
+    },1000);
+}
+
+function check(){
+    clearInterval(timer);
+    const val=document.getElementById("answer").value.trim().toLowerCase();
+    if(current.a.includes(val)){
+        streak++;
+        points+=10*(1+Math.floor(streak/3));
+        document.getElementById("feedback").innerText="Dobrze!";
+    }else{
+        fail();
+        return;
+    }
+    document.getElementById("answer").value="";
+    next();
+}
+
+function fail(){
+    streak=0;
+    document.getElementById("feedback").innerText="Źle: "+current.a[0];
+    document.getElementById("streak").innerText=streak;
+    document.getElementById("answer").value="";
+    next();
+}
+
+function next(){
+    document.getElementById("points").innerText=points;
+    document.getElementById("streak").innerText=streak;
+
+    if(streak>=5){
+        level++;
+        if(level>stages[stage].pool.length){
+            stage++;
+            level=1;
+            if(stage>=stages.length) stage=0;
+        }
+        document.getElementById("level").innerText=level;
+        updateStage();
+    }
+    pick();
+}
+
+function speak(text){
+    if('speechSynthesis' in window){
+        const u=new SpeechSynthesisUtterance(text);
+        u.lang="ko-KR";
+        speechSynthesis.speak(u);
+    }
+}
+
+if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js');
+}
+
+updateStage();
+pick();
+
+</script>
+</body>
+</html>
