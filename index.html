@@ -1,309 +1,1044 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HANGUESS</title>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HANGUESS</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#111">
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
 
-<style>
-body{
-  margin:0;
-  font-family:system-ui;
-  background:#111;
-  color:#fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  min-height:100vh;
-}
-#app{
-  width:100%;
-  max-width:500px;
-  padding:20px;
-  text-align:center;
-}
-button{
-  padding:10px 18px;
-  margin:5px;
-  border-radius:10px;
-  border:none;
-  font-weight:bold;
-  cursor:pointer;
-}
-input{
-  padding:12px;
-  font-size:20px;
-  text-align:center;
-  border-radius:10px;
-  border:none;
-  width:100%;
-}
-.hangul{
-  font-size:80px;
-  margin:20px 0;
-}
-.error{
-  color:#ff4444;
-  font-size:90px;
-}
-.hint{
-  color:#ff8888;
-  margin-top:10px;
-}
-.stats{
-  margin-top:10px;
-  font-size:14px;
-  opacity:0.8;
-}
-.progressBar{
-  height:6px;
-  background:#333;
-  margin:10px 0;
-  border-radius:4px;
-  overflow:hidden;
-}
-.progressInner{
-  height:100%;
-  background:#00ff88;
-  width:100%;
-  transition:width 0.3s;
-}
-.hidden{
-  display:none;
-}
-</style>
-</head>
-<body>
-<div id="app">
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap");
 
-<h1>HANGUESS</h1>
+      :root {
+        --bg-color: #0f172a;
+        --surface-color: rgba(30, 41, 59, 0.7);
+        --primary-color: #3b82f6;
+        --primary-hover: #2563eb;
+        --success-color: #10b981;
+        --error-color: #ef4444;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: rgba(255, 255, 255, 0.1);
+      }
 
-<div id="modeSelect">
-  <button onclick="startGame('learning')">Learning Mode</button>
-  <button onclick="startGame('challenge')">Challenge Mode</button>
-</div>
+      body {
+        margin: 0;
+        font-family:
+          "Outfit",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg-color);
+        background-image: radial-gradient(
+          circle at 50% 0%,
+          #1e293b 0%,
+          #0f172a 100%
+        );
+        color: var(--text-main);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
 
-<div id="game" class="hidden">
+      #app {
+        width: 100%;
+        max-width: 600px;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+      }
 
-<div id="stageInfo"></div>
-<div id="levelInfo"></div>
+      h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 2rem;
+        background: linear-gradient(to right, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 2px;
+      }
 
-<div class="progressBar">
-  <div id="timerBar" class="progressInner"></div>
-</div>
+      h2 {
+        margin-top: 0;
+        font-weight: 600;
+      }
 
-<div id="char" class="hangul"></div>
+      .glass-panel {
+        background: var(--surface-color);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+        position: relative;
+        overflow: hidden;
+      }
 
-<input id="answer" autocomplete="off" />
-<div id="feedback" class="hint"></div>
+      button {
+        padding: 14px 24px;
+        margin: 8px;
+        border-radius: 14px;
+        border: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        font-family: inherit;
+        cursor: pointer;
+        background: var(--primary-color);
+        color: white;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
 
-<div class="stats" id="stats"></div>
+      button:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+      }
 
-<button onclick="quit()">Wyjdź</button>
+      button.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+      }
+      button.secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
 
-</div>
+      input {
+        padding: 16px;
+        font-size: 24px;
+        text-align: center;
+        border-radius: 16px;
+        border: 2px solid var(--border-color);
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.2s;
+        margin-top: 20px;
+      }
 
-</div>
+      input:focus {
+        border-color: var(--primary-color);
+      }
 
-<script>
-const stages = {
+      .hangul-wrapper {
+        display: flex;
+        justify-content: center;
+      }
+      .hangul-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+      }
 
-letters: [
-["ㄱ","g"],["ㄴ","n"],["ㄷ","d"],["ㄹ","r"],
-["ㅁ","m"],["ㅂ","b"],["ㅅ","s"],["ㅇ","ng"],
-["ㅈ","j"],["ㅊ","ch"],["ㅋ","k"],["ㅌ","t"],
-["ㅍ","p"],["ㅎ","h"],
-["ㅏ","a"],["ㅓ","eo"],["ㅗ","o"],["ㅜ","u"],
-["ㅡ","eu"],["ㅣ","i"]
-],
+      .hangul {
+        font-size: 100px;
+        margin: 30px 0;
+        font-weight: 800;
+        text-shadow: 0 0 40px rgba(96, 165, 250, 0.3);
+        transition: transform 0.2s;
+      }
+      .hangul-container:hover .hangul {
+        transform: scale(1.05);
+      }
 
-batchim: [
-["각","gak"],["간","gan"],["갈","gal"],
-["감","gam"],["갑","gap"],["강","gang"],
-["값","gaps"],["읽","ilg"]
-],
+      .hangul.error {
+        color: var(--error-color);
+        text-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
+        animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+      }
 
-syllables: [
-["가","ga"],["너","neo"],["도","do"],
-["고","go"],["구","gu"],["귀","gwi"],
-["한","han"],["달","dal"]
-],
+      .hint {
+        color: var(--error-color);
+        margin-top: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        min-height: 28px;
+      }
 
-words: [
-["집","jip"],["사람","saram"],
-["학교","hakgyo"],["사랑","sarang"],
-["한국","hanguk"]
-]
+      .stats-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
 
-};
+      .progressBar {
+        height: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        margin: 20px 0;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
 
-let mode;
-let stageKeys = ["letters","batchim","syllables","words"];
-let currentStageIndex=0;
-let level=1;
-let pool=[];
-let requiredCorrect=2;
-let progress={};
-let currentItem;
-let lastChar="";
-let timer;
-let timeLimit=5000;
-let startTime;
+      .progressInner {
+        height: 100%;
+        background: linear-gradient(90deg, #34d399, #10b981);
+        width: 100%;
+        transition:
+          width 0.1s linear,
+          background-color 0.3s;
+      }
+      .progressInner.warning {
+        background: linear-gradient(90deg, #fcd34d, #fbbf24);
+      }
+      .progressInner.danger {
+        background: linear-gradient(90deg, #fca5a5, #ef4444);
+      }
 
-function startGame(selected){
-mode=selected;
-document.getElementById("modeSelect").classList.add("hidden");
-document.getElementById("game").classList.remove("hidden");
-loadState();
-initStage();
-}
+      .hidden {
+        display: none !important;
+      }
 
-function initStage(){
-let stageName=stageKeys[currentStageIndex];
-let data=stages[stageName];
-pool=data.slice(0,Math.min(level*4,data.length));
-progress={};
-pool.forEach(x=>progress[x[0]]=0);
-updateUI();
-nextQuestion();
-}
+      /* Learning Screen specific */
+      .learning-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 15px;
+        margin: 30px 0;
+      }
 
-function nextQuestion(){
-let choices=pool.filter(x=>x[0]!==lastChar);
-currentItem=choices[Math.floor(Math.random()*choices.length)];
-lastChar=currentItem[0];
-document.getElementById("char").className="hangul";
-document.getElementById("char").textContent=currentItem[0];
-document.getElementById("feedback").textContent="";
-document.getElementById("answer").value="";
-document.getElementById("answer").focus();
-startTimer();
-}
+      .flashcard {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px 10px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
 
-function startTimer(){
-clearInterval(timer);
-timeLimit=5000 - (level*200);
-if(timeLimit<2000) timeLimit=2000;
-startTime=Date.now();
-timer=setInterval(()=>{
-let elapsed=Date.now()-startTime;
-let percent=100-(elapsed/timeLimit*100);
-if(percent<0) percent=0;
-document.getElementById("timerBar").style.width=percent+"%";
-if(elapsed>timeLimit){
-clearInterval(timer);
-handleWrong("Czas minął!");
-}
-},50);
-}
+      .flashcard:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
+        border-color: rgba(96, 165, 250, 0.5);
+        box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+      }
 
-function handleCorrect(){
-clearInterval(timer);
-progress[currentItem[0]]++;
-playBeep(800);
-if(progress[currentItem[0]]>=requiredCorrect){
-checkAdvance();
-}
-saveState();
-nextQuestion();
-}
+      .flashcard .kr {
+        font-size: 48px;
+        font-weight: 800;
+      }
+      .flashcard .romaja {
+        font-size: 18px;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      .flashcard .speaker {
+        font-size: 14px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .flashcard:hover .speaker {
+        opacity: 1;
+      }
 
-function handleWrong(msg){
-clearInterval(timer);
-playBeep(200);
-progress[currentItem[0]]--;
-requiredCorrect++;
-document.getElementById("char").className="hangul error";
-document.getElementById("feedback").textContent=
-msg+" Poprawnie: "+currentItem[1];
-if(progress[currentItem[0]]<0){
-let allZero=Object.values(progress).every(v=>v<=0);
-if(allZero && level>1){
-level--;
-}
-}
-saveState();
-setTimeout(nextQuestion,1200);
-}
+      @keyframes shake {
+        10%,
+        90% {
+          transform: translate3d(-1px, 0, 0);
+        }
+        20%,
+        80% {
+          transform: translate3d(2px, 0, 0);
+        }
+        30%,
+        50%,
+        70% {
+          transform: translate3d(-4px, 0, 0);
+        }
+        40%,
+        60% {
+          transform: translate3d(4px, 0, 0);
+        }
+      }
 
-function checkAdvance(){
-let allDone=Object.values(progress).every(v=>v>=requiredCorrect);
-if(allDone){
-level++;
-let stageName=stageKeys[currentStageIndex];
-if(level*4>stages[stageName].length){
-currentStageIndex++;
-level=1;
-}
-if(currentStageIndex>=stageKeys.length){
-alert("Gra ukończona!");
-quit();
-return;
-}
-initStage();
-}
-}
+      .speaker-icon {
+        font-size: 28px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+      }
+      .hangul-container:hover .speaker-icon {
+        opacity: 1;
+      }
 
-document.getElementById("answer").addEventListener("keydown",e=>{
-if(e.key==="Enter"){
-if(e.target.value.trim().toLowerCase()===currentItem[1]){
-handleCorrect();
-}else{
-handleWrong("Błąd!");
-}
-}
-});
+      .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: transparent;
+        color: var(--text-muted);
+        border: none;
+        font-size: 20px;
+        padding: 0;
+        margin: 0;
+        box-shadow: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        cursor: pointer;
+        z-index: 50;
+      }
+      .close-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transform: none;
+        box-shadow: none;
+      }
 
-function updateUI(){
-let stageName=stageKeys[currentStageIndex];
-document.getElementById("stageInfo").textContent="Etap: "+stageName;
-document.getElementById("levelInfo").textContent=
-"Poziom: "+level+" | Znaki: "+pool.length+" | Wymagane: "+requiredCorrect;
-if(mode==="challenge"){
-document.getElementById("stats").classList.add("hidden");
-}else{
-document.getElementById("stats").classList.remove("hidden");
-document.getElementById("stats").textContent=
-"Progres: "+JSON.stringify(progress);
-}
-}
+      .progress-badges {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+        overflow-y: auto;
+        max-height: 150px;
+        padding-bottom: 5px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .progress-badges::-webkit-scrollbar {
+        width: 6px;
+      }
+      .progress-badges::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+      }
+      .badge {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s;
+      }
+      .badge.done {
+        border-color: var(--success-color);
+        background: rgba(16, 185, 129, 0.1);
+      }
+      .badge-char {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+      .badge.done .badge-char {
+        color: var(--success-color);
+      }
+      .badge-dots {
+        display: flex;
+        gap: 4px;
+      }
+      .badge-dots .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+      }
+      .badge-dots .dot.filled {
+        background: var(--success-color);
+      }
+      .level-progress-container {
+        margin-top: 15px;
+        text-align: left;
+        cursor: pointer;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        transition: background 0.2s;
+      }
+      .level-progress-container:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .level-progress-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      .level-progress-bar {
+        height: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .level-progress-inner {
+        height: 100%;
+        background: var(--primary-color);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
 
-function playBeep(freq){
-let ctx=new(window.AudioContext||window.webkitAudioContext)();
-let osc=ctx.createOscillator();
-osc.frequency.value=freq;
-osc.connect(ctx.destination);
-osc.start();
-osc.stop(ctx.currentTime+0.15);
-}
+      .sidebar {
+        position: absolute;
+        top: 0;
+        right: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--surface-color);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-left: 1px solid var(--border-color);
+        padding: 30px;
+        box-sizing: border-box;
+        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar.open {
+        right: 0;
+      }
+      .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .sidebar-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>HANGUESS</h1>
 
-function quit(){
-location.reload();
-}
+      <div id="startScreen" class="glass-panel">
+        <h2 data-i18n="welcome">Welcome to HANGUESS</h2>
+        <div class="lang-toggle" style="margin-bottom: 20px">
+          <button id="btn-lang-en" onclick="setLang('en')">🇬🇧 English</button>
+          <button id="btn-lang-pl" class="secondary" onclick="setLang('pl')">
+            🇵🇱 Polski
+          </button>
+        </div>
+        <button onclick="startGame()" data-i18n="startGameBtn">
+          Start Game
+        </button>
+      </div>
 
-function saveState(){
-localStorage.setItem("hanguess",JSON.stringify({
-mode,currentStageIndex,level,requiredCorrect
-}));
-}
+      <div id="learningScreen" class="glass-panel hidden">
+        <button class="close-btn" onclick="quit()" title="Quit Game">✕</button>
+        <h2 data-i18n="newChars">New Characters to Learn</h2>
+        <p style="color: var(--text-muted)" data-i18n="clickToHear">
+          Click on a card to hear its pronunciation
+        </p>
+        <div id="learningGrid" class="learning-grid">
+          <!-- flashcards generated here -->
+        </div>
+        <button onclick="startRoundFromLearning()" data-i18n="startRoundBtn">
+          Start Round
+        </button>
+      </div>
 
-function loadState(){
-let s=localStorage.getItem("hanguess");
-if(s){
-let data=JSON.parse(s);
-mode=data.mode;
-currentStageIndex=data.currentStageIndex;
-level=data.level;
-requiredCorrect=data.requiredCorrect;
-}
-}
+      <div id="game" class="glass-panel hidden" style="padding-top: 40px">
+        <button class="close-btn" onclick="quit()" title="Quit Game">✕</button>
 
-if('serviceWorker' in navigator){
-navigator.serviceWorker.register('sw.js');
-}
-</script>
-</body>
+        <div
+          class="stats-container"
+          style="padding-right: 40px; text-align: left"
+        >
+          <div id="stageInfo"></div>
+          <div id="levelInfo"></div>
+        </div>
+
+        <div class="progressBar">
+          <div id="timerBar" class="progressInner"></div>
+        </div>
+
+        <div class="hangul-wrapper">
+          <div class="hangul-container" onclick="speakCurrent()">
+            <div id="char" class="hangul"></div>
+            <span class="speaker-icon">🔊</span>
+          </div>
+        </div>
+
+        <input
+          id="answer"
+          autocomplete="off"
+          placeholder="Type romanization here..."
+          data-i18n="placeholder"
+        />
+        <div id="feedback" class="hint"></div>
+
+        <div class="level-progress-container" onclick="toggleSidebar()">
+          <div class="level-progress-header">
+            <span data-i18n="levelProgress">Level Progress</span>
+            <span id="levelProgressText">0%</span>
+          </div>
+          <div class="level-progress-bar">
+            <div id="levelProgressInner" class="level-progress-inner"></div>
+          </div>
+        </div>
+
+        <div id="sidebar" class="sidebar">
+          <div class="sidebar-header">
+            <h2 data-i18n="details">Details</h2>
+            <span
+              class="close-btn"
+              style="position: static"
+              onclick="toggleSidebar()"
+              >✕</span
+            >
+          </div>
+          <div class="stats" id="stats" style="flex: 1; overflow-y: auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const i18n = {
+        en: {
+          welcome: "Welcome to HANGUESS",
+          startGameBtn: "Start Game",
+          newChars: "New Characters to Learn",
+          clickToHear: "Click on a card to hear its pronunciation",
+          startRoundBtn: "Start Round",
+          placeholder: "Type romanization here...",
+          levelProgress: "Level Progress",
+          details: "Details",
+          timeUp: "Time's up!",
+          incorrect: "Incorrect!",
+          correctWas: "Correct: ",
+          stage: "Stage: ",
+          levelInfo: "Level: ",
+          itemsInfo: " | Items: ",
+          gameCompleted: "Game Completed! Congratulations!",
+          resetProgress: "Reset Progress",
+          replayLevel: "Replay Level: ",
+          playSelected: "Play Selected Level",
+        },
+        pl: {
+          welcome: "Witamy w HANGUESS",
+          startGameBtn: "Rozpocznij Grę",
+          newChars: "Nowe znaki do nauki",
+          clickToHear: "Kliknij kartę, aby usłyszeć wymowę",
+          startRoundBtn: "Rozpocznij Rundę",
+          placeholder: "Wpisz tutaj romanizację...",
+          levelProgress: "Postęp Poziomu",
+          details: "Szczegóły",
+          timeUp: "Koniec czasu!",
+          incorrect: "Źle!",
+          correctWas: "Poprawnie: ",
+          stage: "Etap: ",
+          levelInfo: "Poziom: ",
+          itemsInfo: " | Elementy: ",
+          gameCompleted: "Gra Ukończona! Gratulacje!",
+          resetProgress: "Zresetuj Postępy",
+          replayLevel: "Zagraj ponownie w poziom: ",
+          playSelected: "Graj w wybrany poziom",
+        },
+      };
+
+      const stages = {
+        letters: [
+          { kr: "ㄱ", en: "g", pl: "k/g" },
+          { kr: "ㄴ", en: "n", pl: "n" },
+          { kr: "ㄷ", en: "d", pl: "t/d" },
+          { kr: "ㄹ", en: "r", pl: "r/l" },
+          { kr: "ㅁ", en: "m", pl: "m" },
+          { kr: "ㅂ", en: "b", pl: "p/b" },
+          { kr: "ㅅ", en: "s", pl: "s" },
+          { kr: "ㅇ", en: "ng", pl: "ng" },
+          { kr: "ㅈ", en: "j", pl: "dź" },
+          { kr: "ㅊ", en: "ch", pl: "ć" },
+          { kr: "ㅋ", en: "k", pl: "k" },
+          { kr: "ㅌ", en: "t", pl: "t" },
+          { kr: "ㅍ", en: "p", pl: "p" },
+          { kr: "ㅎ", en: "h", pl: "h" },
+          { kr: "ㅏ", en: "a", pl: "a" },
+          { kr: "ㅓ", en: "eo", pl: "o (szerokie)" },
+          { kr: "ㅗ", en: "o", pl: "o" },
+          { kr: "ㅜ", en: "u", pl: "u" },
+          { kr: "ㅡ", en: "eu", pl: "y" },
+          { kr: "ㅣ", en: "i", pl: "i" },
+        ],
+
+        batchim: [
+          { kr: "각", en: "gak", pl: "gak" },
+          { kr: "간", en: "gan", pl: "gan" },
+          { kr: "갈", en: "gal", pl: "gal" },
+          { kr: "감", en: "gam", pl: "gam" },
+          { kr: "갑", en: "gap", pl: "gap" },
+          { kr: "강", en: "gang", pl: "gang" },
+          { kr: "값", en: "gaps", pl: "gap" },
+          { kr: "읽", en: "ilg", pl: "il" },
+        ],
+
+        syllables: [
+          { kr: "가", en: "ga", pl: "ga" },
+          { kr: "너", en: "neo", pl: "no" },
+          { kr: "도", en: "do", pl: "do" },
+          { kr: "고", en: "go", pl: "go" },
+          { kr: "구", en: "gu", pl: "gu" },
+          { kr: "귀", en: "gwi", pl: "gwi" },
+          { kr: "한", en: "han", pl: "han" },
+          { kr: "달", en: "dal", pl: "dal" },
+        ],
+
+        words: [
+          { kr: "집", en: "jip", pl: "dźip" },
+          { kr: "사람", en: "saram", pl: "saram" },
+          { kr: "학교", en: "hakgyo", pl: "hakgio" },
+          { kr: "사랑", en: "sarang", pl: "sarang" },
+          { kr: "한국", en: "hanguk", pl: "hanguk" },
+        ],
+      };
+
+      let lang = localStorage.getItem("hanguess_lang") || "en";
+      let maxLevelReached =
+        parseInt(localStorage.getItem("hanguess_max_level")) || 1;
+      let stageKeys = ["letters", "batchim", "syllables", "words"];
+      let currentStageIndex =
+        parseInt(localStorage.getItem("hanguess_stage")) || 0;
+      let level = parseInt(localStorage.getItem("hanguess_level")) || 1;
+      let pool = [];
+      let progress = {};
+      let targets = {};
+      let currentItem;
+      let lastChar = "";
+      let timer;
+      let timeLimit = 5000;
+      let startTime;
+
+      function updateI18n() {
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          let key = el.getAttribute("data-i18n");
+          if (i18n[lang][key]) {
+            if (
+              (el.tagName === "INPUT" && el.type === "text") ||
+              el.hasAttribute("placeholder")
+            ) {
+              el.placeholder = i18n[lang][key];
+            } else {
+              el.textContent = i18n[lang][key];
+            }
+          }
+        });
+      }
+
+      function setLang(selectedLang) {
+        lang = selectedLang;
+        localStorage.setItem("hanguess_lang", lang);
+        document.getElementById("btn-lang-en").className =
+          lang === "en" ? "" : "secondary";
+        document.getElementById("btn-lang-pl").className =
+          lang === "pl" ? "" : "secondary";
+        updateI18n();
+      }
+
+      function speak(text) {
+        if (!("speechSynthesis" in window)) return;
+        window.speechSynthesis.cancel();
+        let utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "ko-KR";
+        utterance.rate = 0.8;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      function speakCurrent() {
+        if (currentItem) {
+          speak(currentItem.kr);
+        }
+      }
+
+      function renderLevelSelector() {
+        let selectorHtml = "";
+        if (maxLevelReached > 1 || currentStageIndex > 0) {
+          selectorHtml += `<div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">`;
+          selectorHtml += `<select id="levelSelect" style="padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border-color); margin-right: 10px;">`;
+
+          let stageCount = 0;
+          let levelCount = 1;
+
+          while (stageCount <= currentStageIndex) {
+            let sKey = stageKeys[stageCount];
+            let maxLForStage =
+              stageCount === currentStageIndex
+                ? level
+                : Math.ceil(stages[sKey].length / 4);
+            for (let l = 1; l <= maxLForStage; l++) {
+              selectorHtml += `<option value="${stageCount}-${l}">Stage: ${sKey}, Level: ${l}</option>`;
+            }
+            stageCount++;
+          }
+
+          selectorHtml += `</select>`;
+          selectorHtml += `<button class="secondary" onclick="playSelectedLevel()" data-i18n="playSelected" style="font-size: 0.9rem; padding: 10px;">${i18n[lang].playSelected}</button>`;
+          selectorHtml += `</div>`;
+        }
+
+        let resetBtn = `<button class="secondary" onclick="resetProgress()" data-i18n="resetProgress" style="margin-top: 20px; width: 100%; color: var(--error-color); border-color: rgba(239, 68, 68, 0.3);">${i18n[lang].resetProgress}</button>`;
+
+        let div = document.getElementById("extraControls");
+        if (!div) {
+          div = document.createElement("div");
+          div.id = "extraControls";
+          document.getElementById("startScreen").appendChild(div);
+        }
+        div.innerHTML = selectorHtml + resetBtn;
+      }
+
+      function startGame() {
+        document.getElementById("startScreen").classList.add("hidden");
+        loadState();
+        initStage();
+      }
+
+      function playSelectedLevel() {
+        let select = document.getElementById("levelSelect");
+        if (select) {
+          let parts = select.value.split("-");
+          currentStageIndex = parseInt(parts[0]);
+          level = parseInt(parts[1]);
+          saveState();
+          startGame();
+        }
+      }
+
+      function resetProgress() {
+        if (confirm("Are you sure you want to reset all game progress?")) {
+          localStorage.removeItem("hanguess");
+          localStorage.removeItem("hanguess_stage");
+          localStorage.removeItem("hanguess_level");
+          localStorage.removeItem("hanguess_max_level");
+          location.reload();
+        }
+      }
+
+      function showLearningScreen(items) {
+        document.getElementById("game").classList.add("hidden");
+        document.getElementById("learningScreen").classList.remove("hidden");
+
+        let grid = document.getElementById("learningGrid");
+        grid.innerHTML = "";
+
+        items.forEach((item) => {
+          let card = document.createElement("div");
+          card.className = "flashcard";
+          card.onclick = () => speak(item.kr);
+          let pronunciation = lang === "pl" && item.pl ? item.pl : item.en;
+          card.innerHTML = `
+        <div class="kr">${item.kr}</div>
+        <div class="romaja">${pronunciation}</div>
+        <div class="speaker">🔊 <span data-i18n="details">${i18n[lang].details}</span></div>
+      `;
+          grid.appendChild(card);
+        });
+      }
+
+      function startRoundFromLearning() {
+        document.getElementById("learningScreen").classList.add("hidden");
+        document.getElementById("game").classList.remove("hidden");
+        nextQuestion();
+      }
+
+      function initStage() {
+        let stageName = stageKeys[currentStageIndex];
+        let data = stages[stageName];
+
+        // limit items for this level
+        let endIndex = Math.min(level * 4, data.length);
+        pool = data.slice(0, endIndex);
+
+        // determine new items for learning phase
+        let startIndex = (level - 1) * 4;
+        let newItems = [];
+        if (startIndex < data.length) {
+          newItems = data.slice(startIndex, startIndex + 4);
+        }
+
+        progress = {};
+
+        // Set explicit targets: "new" items need 2, "known" items need 1
+        pool.forEach((x) => {
+          progress[x.kr] = 0;
+          targets[x.kr] = newItems.includes(x) ? 2 : 1;
+        });
+
+        updateUI();
+
+        if (newItems.length > 0) {
+          showLearningScreen(newItems);
+        } else {
+          document.getElementById("game").classList.remove("hidden");
+          nextQuestion();
+        }
+      }
+
+      function nextQuestion() {
+        let incompletePool = pool.filter(
+          (x) => (progress[x.kr] || 0) < targets[x.kr],
+        );
+        let choices = incompletePool.filter((x) => x.kr !== lastChar);
+        if (choices.length === 0) {
+          choices = incompletePool.length > 0 ? incompletePool : pool;
+        }
+
+        currentItem = choices[Math.floor(Math.random() * choices.length)];
+        lastChar = currentItem.kr;
+
+        let charEl = document.getElementById("char");
+        charEl.className = "hangul";
+        charEl.textContent = currentItem.kr;
+
+        document.getElementById("feedback").textContent = "";
+
+        let answerEl = document.getElementById("answer");
+        answerEl.value = "";
+        answerEl.focus();
+
+        startTimer();
+      }
+
+      function startTimer() {
+        clearInterval(timer);
+        timeLimit = 5000 - level * 200;
+        if (timeLimit < 2000) timeLimit = 2000;
+        startTime = Date.now();
+
+        timer = setInterval(() => {
+          let elapsed = Date.now() - startTime;
+          let percent = 100 - (elapsed / timeLimit) * 100;
+          if (percent < 0) percent = 0;
+
+          let bar = document.getElementById("timerBar");
+          bar.style.width = percent + "%";
+
+          if (percent < 25) {
+            bar.className = "progressInner danger";
+          } else if (percent < 50) {
+            bar.className = "progressInner warning";
+          } else {
+            bar.className = "progressInner";
+          }
+
+          if (elapsed > timeLimit) {
+            clearInterval(timer);
+            handleWrong(i18n[lang].timeUp);
+          }
+        }, 50);
+      }
+
+      function handleCorrect() {
+        clearInterval(timer);
+        progress[currentItem.kr]++;
+        playBeep(800);
+        updateUI();
+        if (progress[currentItem.kr] >= targets[currentItem.kr]) {
+          checkAdvance();
+        } else {
+          saveState();
+          nextQuestion();
+        }
+      }
+
+      function handleWrong(msg) {
+        clearInterval(timer);
+        playBeep(200);
+        progress[currentItem.kr]--;
+        targets[currentItem.kr]++; // Only increase target for this specific character
+        updateUI();
+
+        let charEl = document.getElementById("char");
+        charEl.className = "hangul error";
+
+        let pronunciation =
+          lang === "pl" && currentItem.pl ? currentItem.pl : currentItem.en;
+        document.getElementById("feedback").textContent =
+          msg + " " + i18n[lang].correctWas + pronunciation;
+
+        if (progress[currentItem.kr] < 0) {
+          let allZero = Object.values(progress).every((v) => v <= 0);
+          if (allZero && level > 1) {
+            level--;
+          }
+        }
+
+        saveState();
+        setTimeout(nextQuestion, 1500);
+      }
+
+      function checkAdvance() {
+        let allDone = pool.every((x) => progress[x.kr] >= targets[x.kr]);
+        if (allDone) {
+          level++;
+          if (level > maxLevelReached) maxLevelReached = level;
+          let stageName = stageKeys[currentStageIndex];
+
+          // if we exceeded all items in this stage:
+          if ((level - 1) * 4 >= stages[stageName].length) {
+            currentStageIndex++;
+            level = 1;
+          }
+
+          // and if all stages are done:
+          if (currentStageIndex >= stageKeys.length) {
+            alert(i18n[lang].gameCompleted);
+            quit();
+            return;
+          }
+          saveState();
+          initStage();
+        } else {
+          saveState();
+          nextQuestion();
+        }
+      }
+
+      document.getElementById("answer").addEventListener("input", (e) => {
+        let pronunciation =
+          lang === "pl" && currentItem.pl ? currentItem.pl : currentItem.en;
+        if (e.target.value.trim().toLowerCase() === pronunciation) {
+          setTimeout(() => {
+            document.getElementById("answer").value = "";
+          }, 0);
+          handleCorrect();
+        }
+      });
+      document.getElementById("answer").addEventListener("keydown", (e) => {
+        let pronunciation =
+          lang === "pl" && currentItem.pl ? currentItem.pl : currentItem.en;
+        if (e.key === "Enter") {
+          if (e.target.value.trim().toLowerCase() !== pronunciation) {
+            handleWrong(i18n[lang].incorrect);
+          }
+        }
+      });
+
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      function updateUI() {
+        let stageName = stageKeys[currentStageIndex];
+        document.getElementById("stageInfo").textContent =
+          i18n[lang].stage +
+          stageName.charAt(0).toUpperCase() +
+          stageName.slice(1);
+        document.getElementById("levelInfo").textContent =
+          i18n[lang].levelInfo + level + i18n[lang].itemsInfo + pool.length;
+
+        document.getElementById("stats").classList.remove("hidden");
+        document
+          .querySelector(".level-progress-container")
+          .classList.remove("hidden");
+
+        let totalTarget = pool.reduce((sum, item) => sum + targets[item.kr], 0);
+        let currentTotal = 0;
+
+        let statsHtml = `<div class="progress-badges" style="max-height: none; overflow: visible;">`;
+        for (let i = 0; i < pool.length; i++) {
+          let char = pool[i].kr;
+          let charTarget = targets[char];
+          let score = Math.max(0, Math.min(progress[char] || 0, charTarget));
+          currentTotal += score;
+          let statusClass = score >= charTarget ? "done" : "";
+          let dots = "";
+          for (let j = 0; j < charTarget; j++) {
+            dots += `<span class="dot ${j < score ? "filled" : ""}"></span>`;
+          }
+          statsHtml += `
+              <div class="badge ${statusClass}">
+                  <span class="badge-char">${char}</span>
+                  <div class="badge-dots">${dots}</div>
+              </div>
+          `;
+        }
+        statsHtml += `</div>`;
+        document.getElementById("stats").innerHTML = statsHtml;
+
+        let progressPercent =
+          totalTarget > 0 ? (currentTotal / totalTarget) * 100 : 0;
+        document.getElementById("levelProgressInner").style.width =
+          progressPercent + "%";
+        document.getElementById("levelProgressText").textContent =
+          Math.floor(progressPercent) + "%";
+      }
+
+      function playBeep(freq) {
+        if (!window.AudioContext && !window.webkitAudioContext) return;
+        try {
+          let ctx = new (window.AudioContext || window.webkitAudioContext)();
+          let osc = ctx.createOscillator();
+          osc.frequency.value = freq;
+          osc.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        } catch (e) {}
+      }
+
+      function quit() {
+        location.reload();
+      }
+
+      function saveState() {
+        localStorage.setItem(
+          "hanguess",
+          JSON.stringify({
+            currentStageIndex,
+            level,
+            targets,
+          }),
+        );
+      }
+
+      function loadState() {
+        let s = localStorage.getItem("hanguess");
+        if (s) {
+          let data = JSON.parse(s);
+          mode = data.mode;
+          currentStageIndex = data.currentStageIndex;
+          level = data.level;
+          targets = data.targets || {};
+        }
+      }
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(() => {});
+      }
+    </script>
+  </body>
 </html>
