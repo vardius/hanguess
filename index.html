@@ -3,7 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HANGUESS</title>
+    <title>HANGUESS - Learn Hangul and Korean Alphabet</title>
+    <meta
+      name="description"
+      content="Learn the Korean alphabet (Hangul) with HANGUESS. An interactive flashcard game to practice Korean letters, batchim, syllables, and words."
+    />
+    <meta
+      name="keywords"
+      content="Hangul, Korean alphabet, learn Korean, flashcards, language learning, hangeul, korean spelling"
+    />
+    <meta name="author" content="Vardius" />
+    <meta property="og:title" content="HANGUESS - Learn Hangul" />
+    <meta
+      property="og:description"
+      content="An interactive flashcard game to practice reading and romanizing the Korean alphabet."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hanguess.com" />
 
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#0f172a" />
@@ -574,56 +590,58 @@
 
       const stages = {
         letters: [
-          { kr: "ㄱ", en: "g", pl: "k/g" },
+          { kr: "ㄱ", en: "g/k", pl: "g/k" },
           { kr: "ㄴ", en: "n", pl: "n" },
-          { kr: "ㄷ", en: "d", pl: "t/d" },
-          { kr: "ㄹ", en: "r", pl: "r/l" },
+          { kr: "ㄷ", en: "d/t", pl: "d/t" },
+          { kr: "ㄹ", en: "r/l", pl: "r/l" },
           { kr: "ㅁ", en: "m", pl: "m" },
-          { kr: "ㅂ", en: "b", pl: "p/b" },
+          { kr: "ㅂ", en: "b/p", pl: "b/p" },
           { kr: "ㅅ", en: "s", pl: "s" },
           { kr: "ㅇ", en: "ng", pl: "ng" },
-          { kr: "ㅈ", en: "j", pl: "dź" },
-          { kr: "ㅊ", en: "ch", pl: "ć" },
+          { kr: "ㅈ", en: "j", pl: "dź/j" },
+          { kr: "ㅊ", en: "ch", pl: "ć/cz" },
           { kr: "ㅋ", en: "k", pl: "k" },
           { kr: "ㅌ", en: "t", pl: "t" },
           { kr: "ㅍ", en: "p", pl: "p" },
           { kr: "ㅎ", en: "h", pl: "h" },
           { kr: "ㅏ", en: "a", pl: "a" },
-          { kr: "ㅓ", en: "eo", pl: "o (szerokie)" },
+          { kr: "ㅓ", en: "eo", pl: "o/eo" },
           { kr: "ㅗ", en: "o", pl: "o" },
           { kr: "ㅜ", en: "u", pl: "u" },
-          { kr: "ㅡ", en: "eu", pl: "y" },
+          { kr: "ㅡ", en: "eu", pl: "y/eu" },
           { kr: "ㅣ", en: "i", pl: "i" },
+          { kr: "ㅐ", en: "ae", pl: "ae/e" },
+          { kr: "ㅔ", en: "e", pl: "e" },
         ],
 
         batchim: [
           { kr: "각", en: "gak", pl: "gak" },
           { kr: "간", en: "gan", pl: "gan" },
-          { kr: "갈", en: "gal", pl: "gal" },
+          { kr: "갈", en: "gal/gar", pl: "gal/gar" },
           { kr: "감", en: "gam", pl: "gam" },
           { kr: "갑", en: "gap", pl: "gap" },
           { kr: "강", en: "gang", pl: "gang" },
-          { kr: "값", en: "gaps", pl: "gap" },
-          { kr: "읽", en: "ilg", pl: "il" },
+          { kr: "값", en: "gap/gaps", pl: "gap/gaps" },
+          { kr: "읽", en: "ilg/il/ik", pl: "ilg/il/ik" },
         ],
 
         syllables: [
-          { kr: "가", en: "ga", pl: "ga" },
-          { kr: "너", en: "neo", pl: "no" },
-          { kr: "도", en: "do", pl: "do" },
-          { kr: "고", en: "go", pl: "go" },
-          { kr: "구", en: "gu", pl: "gu" },
-          { kr: "귀", en: "gwi", pl: "gwi" },
+          { kr: "가", en: "ga/ka", pl: "ga/ka" },
+          { kr: "너", en: "neo", pl: "no/neo" },
+          { kr: "도", en: "do/to", pl: "do/to" },
+          { kr: "고", en: "go/ko", pl: "go/ko" },
+          { kr: "구", en: "gu/ku", pl: "gu/ku" },
+          { kr: "귀", en: "gwi/kwi", pl: "gwi/kwi" },
           { kr: "한", en: "han", pl: "han" },
-          { kr: "달", en: "dal", pl: "dal" },
+          { kr: "달", en: "dal/tar", pl: "dal/tal" },
         ],
 
         words: [
           { kr: "집", en: "jip", pl: "dźip" },
-          { kr: "사람", en: "saram", pl: "saram" },
+          { kr: "사람", en: "saram/salam", pl: "saram/salam" },
           { kr: "학교", en: "hakgyo", pl: "hakgio" },
-          { kr: "사랑", en: "sarang", pl: "sarang" },
-          { kr: "한국", en: "hanguk", pl: "hanguk" },
+          { kr: "사랑", en: "sarang/salang", pl: "sarang/salang" },
+          { kr: "한국", en: "hanguk/hangug", pl: "hanguk/hangug" },
         ],
       };
 
@@ -928,10 +946,19 @@
         }
       }
 
+      function checkAnswer(input, validSpellings) {
+        if (!input) return false;
+        let pOptions = validSpellings
+          .split("/")
+          .map((s) => s.trim().toLowerCase());
+        return pOptions.includes(input);
+      }
+
       document.getElementById("answer").addEventListener("input", (e) => {
         let pronunciation =
           lang === "pl" && currentItem.pl ? currentItem.pl : currentItem.en;
-        if (e.target.value.trim().toLowerCase() === pronunciation) {
+        let inputVal = e.target.value.trim().toLowerCase();
+        if (checkAnswer(inputVal, pronunciation)) {
           setTimeout(() => {
             document.getElementById("answer").value = "";
           }, 0);
@@ -941,8 +968,9 @@
       document.getElementById("answer").addEventListener("keydown", (e) => {
         let pronunciation =
           lang === "pl" && currentItem.pl ? currentItem.pl : currentItem.en;
+        let inputVal = e.target.value.trim().toLowerCase();
         if (e.key === "Enter") {
-          if (e.target.value.trim().toLowerCase() !== pronunciation) {
+          if (!checkAnswer(inputVal, pronunciation)) {
             handleWrong(i18n[lang].incorrect);
           }
         }
