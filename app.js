@@ -18,9 +18,9 @@ const i18n = {
     resetProgress: "Reset Progress",
     replayLevel: "Replay Level: ",
     playSelected: "Play Selected Level",
-    listeningMode: "Listening Mode",
     listeningScore: "Score: ",
     gameOver: "Game Over!",
+    finalScore: "Your Final Score: ",
     readingMode: "Reading Mode",
     speakingMode: "Speaking Mode",
     listening: "Listening...",
@@ -44,9 +44,9 @@ const i18n = {
     resetProgress: "Zresetuj Postępy",
     replayLevel: "Zagraj ponownie w poziom: ",
     playSelected: "Graj w wybrany poziom",
-    listeningMode: "Tryb Słuchania",
     listeningScore: "Wynik: ",
     gameOver: "Koniec gry!",
+    finalScore: "Twój końcowy wynik: ",
     readingMode: "Tryb Czytania",
     speakingMode: "Tryb Mówienia",
     listening: "Słuchanie...",
@@ -107,6 +107,41 @@ const stages = {
     { kr: "학교", en: "hakgyo", pl: "hakgio" },
     { kr: "사랑", en: "sarang/salang", pl: "sarang/salang" },
     { kr: "한국", en: "hanguk/hangug", pl: "hanguk/hangug" },
+    { kr: "나무", en: "namu", pl: "namu" },
+    { kr: "바다", en: "bada", pl: "bada" },
+    { kr: "아이", en: "ai", pl: "ai" },
+    { kr: "하늘", en: "haneul", pl: "haneul/hanyl" },
+    { kr: "물", en: "mul", pl: "mul" },
+    { kr: "불", en: "bul", pl: "bul" },
+    { kr: "산", en: "san", pl: "san" },
+    { kr: "책", en: "chaek", pl: "czak/chaek" },
+    { kr: "문", en: "mun", pl: "mun" },
+    { kr: "배", en: "bae", pl: "bae" },
+    { kr: "새", en: "sae", pl: "sae" },
+    { kr: "개", en: "gae", pl: "gae" },
+    { kr: "해", en: "hae", pl: "hae" },
+    { kr: "코", en: "ko", pl: "ko" },
+    { kr: "입", en: "ip", pl: "ip" },
+    { kr: "발", en: "bal", pl: "bal" },
+    { kr: "몸", en: "mom", pl: "mom" },
+    { kr: "방", en: "bang", pl: "bang" },
+    { kr: "국", en: "guk/gug", pl: "guk/gug" },
+    { kr: "밥", en: "bap", pl: "bap" },
+    { kr: "오늘", en: "oneul", pl: "onyl/oneul" },
+    { kr: "내일", en: "naeil", pl: "naeil" },
+    { kr: "모레", en: "more", pl: "more" },
+    { kr: "어제", en: "eoje", pl: "odźe/eoje" },
+    { kr: "아침", en: "achim", pl: "aczim/achim" },
+    { kr: "가을", en: "gaeul", pl: "gayl/gaeul" },
+    { kr: "바지", en: "baji", pl: "badźi/baji" },
+    { kr: "치마", en: "chima", pl: "czima/chima" },
+    { kr: "모자", en: "moja", pl: "modźa/moja" },
+    { kr: "구두", en: "gudu", pl: "gudu" },
+    { kr: "포도", en: "podo", pl: "podo" },
+    { kr: "피자", en: "pija", pl: "pidźa/pija" },
+    { kr: "커피", en: "keopi", pl: "kopi/keopi" },
+    { kr: "기차", en: "gicha", pl: "gicza/gicha" },
+    { kr: "타조", en: "tajo", pl: "tadźo/tajo" },
   ],
 };
 
@@ -246,10 +281,19 @@ function initInfiniteModeQueue() {
   document.getElementById("startScreen").classList.add("hidden");
 
   listeningQueue = [];
-  for (let key of stageKeys) {
-    let arr = [...stages[key]];
+
+  if (isSpeakingMode) {
+    // For Speaking mode, only use words
+    let arr = [...stages["words"]];
     arr.sort(() => Math.random() - 0.5);
     listeningQueue = listeningQueue.concat(arr);
+  } else {
+    // For Listening mode, use all stages
+    for (let key of stageKeys) {
+      let arr = [...stages[key]];
+      arr.sort(() => Math.random() - 0.5);
+      listeningQueue = listeningQueue.concat(arr);
+    }
   }
 
   document.getElementById("game").classList.remove("hidden");
