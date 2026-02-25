@@ -1,6 +1,5 @@
 const i18n = {
   en: {
-    welcome: "Welcome to HANGUESS",
     startGameBtn: "Start Game",
     newChars: "New Characters to Learn",
     clickToHear: "Click on a card to hear its pronunciation",
@@ -26,7 +25,6 @@ const i18n = {
     listening: "Listening...",
   },
   pl: {
-    welcome: "Witamy w HANGUESS",
     startGameBtn: "Rozpocznij Grę",
     newChars: "Nowe znaki do nauki",
     clickToHear: "Kliknij kartę, aby usłyszeć wymowę",
@@ -444,12 +442,27 @@ function nextQuestion() {
   }
   if (isSpeakingMode && recognition) {
     recognition.start();
+
+    recognition.onend = () => {
+      // Re-trigger listening as long as they haven't run out of time
+      // and haven't navigated away from the active item.
+      if (isSpeakingMode && currentItem) {
+        try {
+          recognition.start();
+        } catch (e) {} // ignore if already started
+      }
+    };
+
     recognition.onresult = (event) => {
       let transcript = event.results[0][0].transcript.replace(/\s+/g, "");
       if (transcript.includes(currentItem.kr)) {
+        recognition.onend = null; // stop infinite restarting loop
         recognition.stop();
         document.getElementById("answer").value = transcript;
         handleCorrect();
+      } else {
+        playBeep(200); // feedback that what they said was wrong
+        document.getElementById("answer").value = `"${transcript}" - Retry...`;
       }
     };
     recognition.onerror = () => {
