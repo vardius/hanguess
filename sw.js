@@ -1,9 +1,15 @@
-const CACHE_NAME = "hanguess-v7";
+const CACHE_NAME = "hanguess-v8";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(["./", "./index.html", "./manifest.json"]);
+      return cache.addAll([
+        "./",
+        "./index.html",
+        "./manifest.json",
+        "./style.css",
+        "./app.js",
+      ]);
     }),
   );
 });
