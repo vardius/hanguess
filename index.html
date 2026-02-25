@@ -38,23 +38,27 @@
             🇵🇱 Polski
           </button>
         </div>
-        <div
-          style="
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-          "
-        >
-          <button onclick="startGame()" data-i18n="startGameBtn">
-            Start Game
+        <div class="mode-selector">
+          <button
+            onclick="startGame()"
+            class="mode-btn"
+            data-i18n="readingMode"
+          >
+            Reading Mode
           </button>
           <button
             onclick="startListeningGame()"
-            class="secondary"
+            class="mode-btn secondary"
             data-i18n="listeningMode"
           >
             Listening Mode
+          </button>
+          <button
+            onclick="startSpeakingGame()"
+            class="mode-btn secondary"
+            data-i18n="speakingMode"
+          >
+            Speaking Mode
           </button>
         </div>
       </div>

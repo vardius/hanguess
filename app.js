@@ -21,7 +21,9 @@ const i18n = {
     listeningMode: "Listening Mode",
     listeningScore: "Score: ",
     gameOver: "Game Over!",
-    finalScore: "Your Final Score: ",
+    readingMode: "Reading Mode",
+    speakingMode: "Speaking Mode",
+    listening: "Listening...",
   },
   pl: {
     welcome: "Witamy w HANGUESS",
@@ -45,7 +47,9 @@ const i18n = {
     listeningMode: "Tryb Słuchania",
     listeningScore: "Wynik: ",
     gameOver: "Koniec gry!",
-    finalScore: "Twój końcowy wynik: ",
+    readingMode: "Tryb Czytania",
+    speakingMode: "Tryb Mówienia",
+    listening: "Słuchanie...",
   },
 };
 
@@ -120,8 +124,20 @@ let timer;
 let timeLimit = 5000;
 let startTime;
 let isListeningMode = false;
+let isSpeakingMode = false;
 let listeningScore = 0;
 let listeningQueue = [];
+
+// Speech recognition setup
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = "ko-KR";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+}
 
 function updateI18n() {
   document.querySelectorAll("[data-i18n]").forEach((el) => {
@@ -159,7 +175,7 @@ function speak(text) {
 }
 
 function speakCurrent() {
-  if (currentItem) {
+  if (currentItem && !isSpeakingMode) {
     speak(currentItem.kr);
   }
 }
@@ -203,6 +219,7 @@ function renderLevelSelector() {
 
 function startGame() {
   isListeningMode = false;
+  isSpeakingMode = false;
   document.getElementById("startScreen").classList.add("hidden");
   loadState();
   initStage();
@@ -210,6 +227,21 @@ function startGame() {
 
 function startListeningGame() {
   isListeningMode = true;
+  isSpeakingMode = false;
+  initInfiniteModeQueue();
+}
+
+function startSpeakingGame() {
+  if (!recognition) {
+    alert("Speech recognition isn't supported in your browser.");
+    return;
+  }
+  isSpeakingMode = true;
+  isListeningMode = false;
+  initInfiniteModeQueue();
+}
+
+function initInfiniteModeQueue() {
   listeningScore = 0;
   document.getElementById("startScreen").classList.add("hidden");
 
@@ -221,6 +253,23 @@ function startListeningGame() {
   }
 
   document.getElementById("game").classList.remove("hidden");
+
+  if (isSpeakingMode) {
+    document.getElementById("answer").disabled = true;
+    document.getElementById("answer").placeholder = i18n[lang].listening;
+  } else {
+    document.getElementById("answer").disabled = false;
+    document.getElementById("answer").placeholder = i18n[lang].placeholder;
+  }
+
+  // enable or disable speaker icon globally visually:
+  document.querySelector(".hangul-container").style.cursor = isSpeakingMode
+    ? "default"
+    : "pointer";
+  document.querySelector(".speaker-icon").style.display = isSpeakingMode
+    ? "none"
+    : "inline-block";
+
   nextQuestion();
 }
 
@@ -306,7 +355,7 @@ function initStage() {
 }
 
 function nextQuestion() {
-  if (isListeningMode) {
+  if (isListeningMode || isSpeakingMode) {
     if (listeningScore < listeningQueue.length) {
       currentItem = listeningQueue[listeningScore];
     } else {
@@ -337,19 +386,37 @@ function nextQuestion() {
   document.getElementById("feedback").textContent = "";
 
   let answerEl = document.getElementById("answer");
-  answerEl.value = "";
-  answerEl.focus();
+  if (!isSpeakingMode) {
+    answerEl.value = "";
+    answerEl.focus();
+  } else {
+    answerEl.value = i18n[lang].listening;
+  }
 
   startTimer();
 
   if (isListeningMode) {
     speakCurrent();
   }
+  if (isSpeakingMode && recognition) {
+    recognition.start();
+    recognition.onresult = (event) => {
+      let transcript = event.results[0][0].transcript.replace(/\s+/g, "");
+      if (transcript.includes(currentItem.kr)) {
+        recognition.stop();
+        document.getElementById("answer").value = transcript;
+        handleCorrect();
+      }
+    };
+    recognition.onerror = () => {
+      /* ignore or handle mic issues */
+    };
+  }
 }
 
 function startTimer() {
   clearInterval(timer);
-  if (isListeningMode) {
+  if (isListeningMode || isSpeakingMode) {
     timeLimit = 5000 - currentStageIndex * 500;
   } else {
     timeLimit = 5000 - level * 200;
@@ -383,8 +450,11 @@ function startTimer() {
 function handleCorrect() {
   clearInterval(timer);
   playBeep(800);
+  if (isSpeakingMode && recognition) {
+    recognition.stop();
+  }
 
-  if (isListeningMode) {
+  if (isListeningMode || isSpeakingMode) {
     listeningScore++;
     updateUI();
     setTimeout(nextQuestion, 400);
@@ -404,6 +474,9 @@ function handleCorrect() {
 function handleWrong(msg) {
   clearInterval(timer);
   playBeep(200);
+  if (isSpeakingMode && recognition) {
+    recognition.stop();
+  }
 
   let charEl = document.getElementById("char");
   charEl.className = "hangul error";
@@ -411,13 +484,17 @@ function handleWrong(msg) {
   let pronunciation =
     lang === "pl" && currentItem.pl ? currentItem.pl : currentItem.en;
 
-  let correctText = isListeningMode
-    ? `${msg} ${currentItem.kr} = ${pronunciation}`
-    : `${msg} ${i18n[lang].correctWas}${pronunciation}`;
+  let correctText =
+    isListeningMode || isSpeakingMode
+      ? `${msg} ${currentItem.kr} = ${pronunciation}`
+      : `${msg} ${i18n[lang].correctWas}${pronunciation}`;
 
   document.getElementById("feedback").textContent = correctText;
 
-  if (isListeningMode) {
+  if (isListeningMode || isSpeakingMode) {
+    if (isSpeakingMode) {
+      speak(currentItem.kr); // auto-play correct pronounciation if they failed
+    }
     charEl.textContent = currentItem.kr; // reveal what it was
     updateUI();
     setTimeout(() => {
@@ -507,9 +584,11 @@ function updateUI() {
   let stageName = stageKeys[currentStageIndex] || stageKeys[0];
   let stageDisplay = stageName.charAt(0).toUpperCase() + stageName.slice(1);
 
-  if (isListeningMode) {
+  if (isListeningMode || isSpeakingMode) {
     document.getElementById("stageInfo").textContent =
-      i18n[lang].listeningMode + " - " + stageDisplay;
+      (isSpeakingMode ? i18n[lang].speakingMode : i18n[lang].listeningMode) +
+      " - " +
+      stageDisplay;
     document.getElementById("levelInfo").textContent =
       i18n[lang].listeningScore + listeningScore;
 
