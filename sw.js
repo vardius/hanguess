@@ -1,4 +1,4 @@
-const CACHE_NAME = "hanguess-v11";
+const CACHE_NAME = "hanguess-v12";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(

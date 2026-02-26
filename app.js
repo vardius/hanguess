@@ -24,6 +24,8 @@ const i18n = {
     speakingMode: "Speaking Mode",
     listening: "Listening...",
     micError: "Microphone error: ",
+    nextQuestion: "Next",
+    quit: "Quit",
   },
   pl: {
     startGameBtn: "Rozpocznij Grę",
@@ -50,6 +52,8 @@ const i18n = {
     speakingMode: "Tryb Mówienia",
     listening: "Słuchanie...",
     micError: "Błąd mikrofonu: ",
+    nextQuestion: "Następne",
+    quit: "Wyjdź",
   },
 };
 
@@ -592,16 +596,11 @@ function handleWrong(msg) {
 
   if (isListeningMode || isSpeakingMode) {
     if (isSpeakingMode) {
-      speak(currentItem.kr); // auto-play correct pronounciation if they failed
+      speak(currentItem.kr); // auto-play correct pronunciation if they failed
     }
     charEl.textContent = currentItem.kr; // reveal what it was
     updateUI();
-    setTimeout(() => {
-      alert(
-        i18n[lang].gameOver + "\n" + i18n[lang].finalScore + listeningScore,
-      );
-      quit();
-    }, 2000);
+    showGameOver();
     return;
   }
 
@@ -748,6 +747,25 @@ function playBeep(freq) {
     osc.start();
     osc.stop(ctx.currentTime + 0.1);
   } catch (e) {}
+}
+
+function showGameOver() {
+  let feedbackEl = document.getElementById("feedback");
+  feedbackEl.innerHTML = `
+    <div style="margin-top: 10px;">
+      <div style="font-size: 1.2rem; margin-bottom: 12px;">${i18n[lang].gameOver} ${i18n[lang].finalScore}${listeningScore}</div>
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <button onclick="continueAfterWrong()" style="margin: 0; padding: 10px 20px; font-size: 1rem;">${i18n[lang].nextQuestion}</button>
+        <button class="secondary" onclick="quit()" style="margin: 0; padding: 10px 20px; font-size: 1rem; color: var(--error-color); border-color: rgba(239,68,68,0.3);">${i18n[lang].quit}</button>
+      </div>
+    </div>
+  `;
+}
+
+function continueAfterWrong() {
+  document.getElementById("feedback").innerHTML = "";
+  listeningScore = 0;
+  nextQuestion();
 }
 
 function quit() {
