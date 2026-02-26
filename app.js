@@ -23,6 +23,7 @@ const i18n = {
     readingMode: "Reading Mode",
     speakingMode: "Speaking Mode",
     listening: "Listening...",
+    micError: "Microphone error: ",
   },
   pl: {
     startGameBtn: "Rozpocznij Grę",
@@ -48,6 +49,7 @@ const i18n = {
     readingMode: "Tryb Czytania",
     speakingMode: "Tryb Mówienia",
     listening: "Słuchanie...",
+    micError: "Błąd mikrofonu: ",
   },
 };
 
@@ -168,8 +170,8 @@ let recognition = null;
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
   recognition.lang = "ko-KR";
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.continuous = true;
+  recognition.interimResults = true;
 }
 
 function updateI18n() {
@@ -431,8 +433,10 @@ function nextQuestion() {
   if (!isSpeakingMode) {
     answerEl.value = "";
     answerEl.focus();
+    answerEl.classList.remove("listening-active");
   } else {
-    answerEl.value = i18n[lang].listening;
+    answerEl.value = "";
+    answerEl.placeholder = i18n[lang].listening;
   }
 
   startTimer();
@@ -440,34 +444,68 @@ function nextQuestion() {
   if (isListeningMode) {
     speakCurrent();
   }
+
   if (isSpeakingMode && recognition) {
-    recognition.start();
+    try {
+      recognition.abort();
+    } catch (e) {}
+
+    answerEl.classList.add("listening-active");
 
     recognition.onend = () => {
       // Re-trigger listening as long as they haven't run out of time
-      // and haven't navigated away from the active item.
       if (isSpeakingMode && currentItem) {
         try {
           recognition.start();
-        } catch (e) {} // ignore if already started
+        } catch (e) {}
+      } else {
+        answerEl.classList.remove("listening-active");
       }
     };
 
     recognition.onresult = (event) => {
-      let transcript = event.results[0][0].transcript.replace(/\s+/g, "");
-      if (transcript.includes(currentItem.kr)) {
-        recognition.onend = null; // stop infinite restarting loop
+      let interimTranscript = "";
+      let finalTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      let currentTranscript = finalTranscript || interimTranscript;
+      let cleaned = currentTranscript.replace(/\s+/g, "");
+
+      if (currentTranscript) {
+        answerEl.value = currentTranscript;
+      }
+
+      if (cleaned.includes(currentItem.kr)) {
+        recognition.onend = null;
         recognition.stop();
-        document.getElementById("answer").value = transcript;
+        answerEl.classList.remove("listening-active");
         handleCorrect();
-      } else {
+      } else if (finalTranscript) {
         playBeep(200); // feedback that what they said was wrong
-        document.getElementById("answer").value = `"${transcript}" - Retry...`;
+        answerEl.value = `"${currentTranscript}" - Retry...`;
       }
     };
-    recognition.onerror = () => {
-      /* ignore or handle mic issues */
+
+    recognition.onerror = (event) => {
+      if (event.error !== "no-speech" && event.error !== "aborted") {
+        playBeep(200);
+        document.getElementById("feedback").textContent =
+          `${i18n[lang].micError}${event.error}`;
+        answerEl.classList.remove("listening-active");
+        answerEl.value = "";
+      }
     };
+
+    try {
+      recognition.start();
+    } catch (e) {}
   }
 }
 
@@ -508,7 +546,9 @@ function handleCorrect() {
   clearInterval(timer);
   playBeep(800);
   if (isSpeakingMode && recognition) {
+    recognition.onend = null;
     recognition.stop();
+    document.getElementById("answer").classList.remove("listening-active");
   }
 
   if (isListeningMode || isSpeakingMode) {
@@ -532,7 +572,9 @@ function handleWrong(msg) {
   clearInterval(timer);
   playBeep(200);
   if (isSpeakingMode && recognition) {
+    recognition.onend = null;
     recognition.stop();
+    document.getElementById("answer").classList.remove("listening-active");
   }
 
   let charEl = document.getElementById("char");
